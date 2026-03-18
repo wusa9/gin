@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>539彩券研究站 每日冷熱號分析</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans TC', '微軟正黑體', sans-serif;
+    background: #f5e6c8;
+    color: #222;
+    font-size: 16px;
+  }
+
+  /* ===== 頂部跑馬燈（無縫循環） ===== */
+  .marquee-bar {
+    background: #1a1a1a;
+    color: #ffd600;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 7px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    border-bottom: 3px solid #ffd600;
+  }
+  .marquee-track {
+    display: inline-flex;
+    animation: seamless 28s linear infinite;
+  }
+  .marquee-track span {
+    padding-right: 60px;
+  }
+  @keyframes seamless {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  /* ===== 大標題區 ===== */
+  .hero {
+    background: #c62828;
+    background-image:
+      repeating-linear-gradient(45deg, rgba(0,0,0,0.05) 0, rgba(0,0,0,0.05) 1px, transparent 0, transparent 50%);
+    background-size: 8px 8px;
+    text-align: center;
+    padding: 20px 14px 24px;
+    border-bottom: 5px solid #ffd600;
+  }
+  .hero-sticker {
+    display: inline-block;
+    background: #ffd600;
+    color: #c62828;
+    font-size: 12px;
+    font-weight: 900;
+    padding: 3px 16px;
+    letter-spacing: 3px;
+    transform: rotate(-2deg);
+    margin-bottom: 10px;
+    border: 2px solid #fff;
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.2);
+  }
+  .hero h1 {
+    font-size: 42px;
+    font-weight: 900;
+    color: #fff;
+    text-shadow: 3px 3px 0 #7f0000;
+    line-height: 1.15;
+    letter-spacing: 3px;
+  }
+  .hero h1 em {
+    color: #ffd600;
+    font-style: normal;
+    font-size: 48px;
+  }
+  .hero-tagline {
+    margin-top: 10px;
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .hero-tagline span {
+    background: rgba(0,0,0,0.3);
+    color: #ffe082;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 2px;
+    border: 1px solid rgba(255,255,255,0.2);
+    letter-spacing: 1px;
+  }
+
+  /* ===== 紅色輪播通知帶 ===== */
+  .notice-strip {
+    background: #ffd600;
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    gap: 8px;
+    border-bottom: 3px solid #c62828;
+    min-height: 38px;
+  }
+  .notice-strip .label {
+    background: #c62828;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 900;
+    padding: 2px 8px;
+    flex-shrink: 0;
+    letter-spacing: 2px;
+  }
+  .notice-strip .text {
+    font-size: 13px;
+    font-weight: 700;
+    color: #7f0000;
+    overflow: hidden;
+    flex: 1;
+    position: relative;
+    height: 1.5em;
+    line-height: 1.5em;
+  }
+  .notice-item {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    transform: translateY(-100%);
+    transition: transform 0.35s ease, opacity 0.35s ease;
+    opacity: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .notice-item.active {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  .notice-item.exit {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+
+  /* ===== 容器 ===== */
+  .container {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 0 8px;
+  }
+
+  /* ===== 區塊 ===== */
+  .block {
+    margin: 12px 0;
+    border: 2px solid #8b1a1a;
+    background: #fffdf5;
+    overflow: hidden;
+  }
+  .block-hd {
+    background: #8b1a1a;
+    color: #ffd600;
+    font-size: 15px;
+    font-weight: 900;
+    padding: 6px 12px;
+    letter-spacing: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .block-hd-right {
+    font-size: 11px;
+    color: #ffcc80;
+    letter-spacing: 0;
+    font-weight: 400;
+  }
+  .block-bd { padding: 12px; }
+
+  /* ===== 統計表格 ===== */
+  .stat-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  .stat-table th {
+    background: #ffeeba;
+    color: #7f0000;
+    padding: 7px 6px;
+    border: 1px solid #d4a017;
+    font-weight: 900;
+    text-align: center;
+    font-size: 13px;
+  }
+  .stat-table td {
+    padding: 7px 6px;
+    border: 1px solid #e8d5a3;
+    text-align: center;
+  }
+  .stat-table tr:nth-child(odd) td { background: #fffdf5; }
+  .stat-table tr:nth-child(even) td { background: #fff8e8; }
+  .hot1 { color: #c62828; font-weight: 900; font-size: 17px; }
+  .hot2 { color: #e65100; font-weight: 700; }
+  .hot3 { color: #f57f17; font-weight: 700; }
+  .cold-row td { background: #e8f5e9 !important; color: #2e7d32; font-weight: 700; }
+  .num-circle {
+    display: inline-block;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    line-height: 30px;
+    text-align: center;
+    font-weight: 900;
+    font-size: 15px;
+    border: 2px solid currentColor;
+  }
+
+  /* ===== 連續開出紀錄 ===== */
+  .streak-row {
+    display: flex;
+    align-items: center;
+    padding: 9px 0;
+    border-bottom: 1px dashed #d4a017;
+    gap: 10px;
+    font-size: 14px;
+  }
+  .streak-row:last-child { border-bottom: none; }
+  .streak-num {
+    width: 38px; height: 38px;
+    border-radius: 4px;
+    background: linear-gradient(180deg, #ffd600, #ff8f00);
+    border: 2px solid #c62828;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; font-weight: 900; color: #7f0000;
+    flex-shrink: 0;
+  }
+  .streak-bar-wrap {
+    flex: 1;
+  }
+  .streak-label { font-size: 12px; color: #888; margin-bottom: 3px; }
+  .streak-bar {
+    height: 12px;
+    background: #f0d080;
+    border-radius: 2px;
+    overflow: hidden;
+    border: 1px solid #d4a017;
+  }
+  .streak-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #c62828, #ff5722);
+    border-radius: 2px;
+  }
+  .streak-count {
+    font-size: 13px;
+    font-weight: 900;
+    color: #c62828;
+    flex-shrink: 0;
+    min-width: 36px;
+    text-align: right;
+  }
+
+  /* ===== 見證區 ===== */
+  .testi-card {
+    background: #fff;
+    border: 1px solid #d4a017;
+    border-left: 5px solid #c62828;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    position: relative;
+  }
+  .testi-card:last-child { margin-bottom: 0; }
+  .testi-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .testi-avatar {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: #c62828;
+    color: #ffd600;
+    font-size: 20px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    border: 2px solid #ffd600;
+  }
+  .testi-name { font-weight: 900; font-size: 14px; color: #333; }
+  .testi-loc { font-size: 12px; color: #888; }
+  .testi-stars { color: #ffd600; font-size: 13px; letter-spacing: 1px; }
+  .testi-body { font-size: 14px; line-height: 1.8; color: #444; }
+  .prize-tag {
+    display: inline-block;
+    background: #c62828;
+    color: #ffd600;
+    font-weight: 900;
+    font-size: 15px;
+    padding: 1px 9px;
+    margin: 0 2px;
+    vertical-align: baseline;
+  }
+
+  /* ===== FAQ ===== */
+  .faq-item {
+    border-bottom: 1px dashed #d4a017;
+    padding: 10px 0;
+  }
+  .faq-item:last-child { border-bottom: none; }
+  .faq-q {
+    font-weight: 900;
+    font-size: 14px;
+    color: #7f0000;
+    margin-bottom: 5px;
+    display: flex;
+    gap: 6px;
+  }
+  .faq-q::before { content: 'Q.'; color: #c62828; }
+  .faq-a {
+    font-size: 13px;
+    line-height: 1.8;
+    color: #444;
+    padding-left: 22px;
+  }
+
+  /* ===== CTA ===== */
+  .cta-wrap {
+    background: #1a1a1a;
+    border: 3px solid #ffd600;
+    padding: 18px 14px;
+    margin: 14px 0;
+    text-align: center;
+  }
+  .cta-top {
+    color: #ffd600;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+  }
+  .cta-main {
+    color: #fff;
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    margin-bottom: 14px;
+    line-height: 1.4;
+  }
+  .cta-main em {
+    color: #ffd600;
+    font-style: normal;
+  }
+  .cta-btn {
+    display: block;
+    width: 100%;
+    background: #ffd600;
+    color: #7f0000;
+    font-size: 20px;
+    font-weight: 900;
+    padding: 16px 15px 14px;
+    border: 3px solid #7f0000;
+    letter-spacing: 3px;
+    cursor: pointer;
+    box-shadow: 0 6px 0 #7f0000;
+    transition: transform 0.1s, box-shadow 0.1s;
+    animation: ctaShake 4s ease-in-out infinite;
+    line-height: 1.6;
+  }
+  @keyframes ctaShake {
+    0%,90%,100% { transform: translateY(0); }
+    93% { transform: translateY(-3px); }
+    96% { transform: translateY(-1px); }
+  }
+  .cta-btn:active { transform: translateY(3px); box-shadow: none; }
+  .cta-small {
+    margin-top: 10px;
+    font-size: 12px;
+    color: #888;
+  }
+  .cta-small b { color: #ffd600; }
+
+  /* ===== 底部再催一次 ===== */
+  .last-push {
+    display: block;
+    width: 100%;
+    background: repeating-linear-gradient(
+      -45deg,
+      #c62828,
+      #c62828 10px,
+      #b71c1c 10px,
+      #b71c1c 20px
+    );
+    color: #fff;
+    text-align: center;
+    padding: 20px 14px 16px;
+    margin: 12px 0;
+    border: 4px solid #ffd600;
+    cursor: pointer;
+    box-shadow: 0 6px 0 #7f0000;
+    transition: transform 0.1s, box-shadow 0.1s;
+    text-decoration: none;
+    position: relative;
+  }
+  .last-push:active { transform: translateY(5px); box-shadow: 0 1px 0 #7f0000; }
+  .last-push .big { font-size: 22px; font-weight: 900; letter-spacing: 3px; }
+  .last-push .sm { font-size: 13px; color: #ffcdd2; margin-top: 6px; }
+  .last-push .tap-hint {
+    display: inline-block;
+    margin-top: 10px;
+    background: #ffd600;
+    color: #7f0000;
+    font-size: 13px;
+    font-weight: 900;
+    padding: 4px 18px;
+    letter-spacing: 2px;
+    animation: hintPulse 1.2s ease-in-out infinite;
+  }
+  @keyframes hintPulse {
+    0%,100% { transform: scale(1); }
+    50% { transform: scale(1.06); }
+  }
+
+  /* ===== 浮動 ===== */
+  .float-btn {
+    position: fixed;
+    bottom: 18px; right: 12px;
+    width: 64px; height: 64px;
+    background: #c62828;
+    border: 3px solid #ffd600;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column;
+    color: #ffd600;
+    font-size: 10px;
+    font-weight: 900;
+    cursor: pointer;
+    z-index: 999;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+    animation: floatPop 2.5s ease-in-out infinite;
+    text-align: center;
+    line-height: 1.3;
+  }
+  .float-btn .ico { font-size: 24px; }
+  @keyframes floatPop {
+    0%,100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+
+  /* ===== 底部 ===== */
+  .footer {
+    background: #111;
+    color: #666;
+    font-size: 11px;
+    padding: 14px 16px;
+    line-height: 1.9;
+    text-align: center;
+  }
+
+  /* ===== 開獎時間 ===== */
+  .draw-time-bar {
+    background: #fff8dc;
+    border: 2px dashed #c62828;
+    text-align: center;
+    padding: 9px 12px;
+    margin: 10px 0;
+    font-size: 14px;
+    font-weight: 700;
+    color: #7f0000;
+    letter-spacing: 1px;
+  }
+</style>
+</head>
+<body>
+
+<!-- 無縫跑馬燈 -->
+<div class="marquee-bar">
+  <div class="marquee-track" id="mtrack">
+    <span>🔥 近30期最熱號碼統計出爐！</span>
+    <span>💰 會員喜報：阿華中了 $31,000！</span>
+    <span>📊 冷號 04、27 已連續缺席超過12期！</span>
+    <span>⭐ 每日早上9點準時更新分析！</span>
+    <span>🎯 加入LINE群組 每天免費收到資訊！</span>
+    <span>🔔 每日準時開獎！</span>
+    <span>💬 美珠姊上個月中三次！跟她問問怎麼選的！</span>
+    <span>📈 39個號碼 哪些最常出現？看下面統計！</span>
+    <span>🔥 近30期最熱號碼統計出爐！</span>
+    <span>💰 會員喜報：阿華中了 $31,000！</span>
+    <span>📊 冷號 04、27 已連續缺席超過12期！</span>
+    <span>⭐ 每日早上9點準時更新分析！</span>
+    <span>🎯 加入LINE群組 每天免費收到資訊！</span>
+    <span>🔔 每日準時開獎！</span>
+    <span>💬 美珠姊上個月中三次！跟她問問怎麼選的！</span>
+    <span>📈 39個號碼 哪些最常出現？看下面統計！</span>
+  </div>
+</div>
+
+<!-- 英雄區 -->
+<div class="hero">
+  <div class="hero-sticker">每日免費更新</div>
+  <h1><em>539</em><br>冷熱號研究站</h1>
+  <div class="hero-tagline">
+    <span>📊 走勢分析</span>
+    <span>🔥 熱號統計</span>
+    <span>❄️ 冷號追蹤</span>
+  </div>
+</div>
+
+<!-- 通知條輪播 -->
+<div class="notice-strip">
+  <div class="label">最新消息</div>
+  <div class="text" id="noticeBox">
+    <div class="notice-item active">🎉 阿明今日回報：對到4個號碼 中獎 $8,500 元！</div>
+    <div class="notice-item">🎊 美珠姊回報：對中3個 中獎 $1,200 元！</div>
+    <div class="notice-item">💰 建國先生回報：27號冷號補出 對中4個 $9,000 元！</div>
+    <div class="notice-item">🥳 阿鳳今日回報：連續兩期中獎 這期又對到 $2,800 元！</div>
+    <div class="notice-item">🎉 老陳回報：照熱號下去 對中3個 中獎 $1,200 元！</div>
+    <div class="notice-item">💰 秀英阿姨回報：買了10注 中了2注 賺 $16,000 元！</div>
+    <div class="notice-item">🎊 阿文回報：07連續出現果然又中了 $1,200 元！</div>
+    <div class="notice-item">🥳 明達今日回報：冷號33補出 對到5個 中獎 $100,000 元！</div>
+    <div class="notice-item">🎉 淑惠姊回報：這期對中4個 領回 $8,500 元！</div>
+    <div class="notice-item">💰 阿龍回報：照統計選號 對中3個 $1,200 元！</div>
+    <div class="notice-item">🎊 文雄大哥回報：連3期中獎 這期又對中 $2,800 元！</div>
+    <div class="notice-item">🥳 翠華今日回報：23號果然又出 對中4個 $9,000 元！</div>
+    <div class="notice-item">🎉 阿海回報：冷號04終於出現 對中3個 $1,200 元！</div>
+    <div class="notice-item">💰 金花阿姨回報：買了5注 中了1注 $31,000 元！</div>
+    <div class="notice-item">🎊 阿川今日回報：參考熱號分析 對中4個 $8,500 元！</div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- 開獎時間 -->
+  <div class="draw-time-bar">
+    📅 每週一到週日 準時開獎
+  </div>
+
+  <!-- 近30期冷熱統計 -->
+  <div class="block">
+    <div class="block-hd">
+      🔥 近30期號碼熱度排行
+      <span class="block-hd-right">資料每日更新</span>
+    </div>
+    <div class="block-bd">
+      <table class="stat-table">
+        <thead>
+          <tr>
+            <th>排名</th>
+            <th>號碼</th>
+            <th>近30期出現</th>
+            <th>熱度</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="hot1">🥇</td>
+            <td class="hot1"><span class="num-circle" style="color:#c62828; border-color:#c62828">23</span></td>
+            <td class="hot1">14 次</td>
+            <td>🔥🔥🔥🔥</td>
+          </tr>
+          <tr>
+            <td class="hot2">🥈</td>
+            <td class="hot2"><span class="num-circle" style="color:#e65100; border-color:#e65100">07</span></td>
+            <td class="hot2">12 次</td>
+            <td>🔥🔥🔥🔥</td>
+          </tr>
+          <tr>
+            <td class="hot3">🥉</td>
+            <td class="hot3"><span class="num-circle" style="color:#f57f17; border-color:#f57f17">15</span></td>
+            <td class="hot3">11 次</td>
+            <td>🔥🔥🔥</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td><span class="num-circle" style="color:#555; border-color:#aaa">38</span></td>
+            <td>10 次</td>
+            <td>🔥🔥</td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td><span class="num-circle" style="color:#555; border-color:#aaa">31</span></td>
+            <td>9 次</td>
+            <td>🔥🔥</td>
+          </tr>
+          <tr>
+            <td>6</td>
+            <td><span class="num-circle" style="color:#555; border-color:#aaa">12</span></td>
+            <td>8 次</td>
+            <td>🔥</td>
+          </tr>
+          <tr class="cold-row">
+            <td>❄️ 冷號</td>
+            <td><span class="num-circle" style="color:#2e7d32; border-color:#2e7d32">04</span></td>
+            <td>僅 2 次</td>
+            <td>待爆？</td>
+          </tr>
+          <tr class="cold-row">
+            <td>❄️ 冷號</td>
+            <td><span class="num-circle" style="color:#2e7d32; border-color:#2e7d32">27</span></td>
+            <td>僅 3 次</td>
+            <td>待爆？</td>
+          </tr>
+          <tr class="cold-row">
+            <td>❄️ 冷號</td>
+            <td><span class="num-circle" style="color:#2e7d32; border-color:#2e7d32">33</span></td>
+            <td>僅 3 次</td>
+            <td>待爆？</td>
+          </tr>
+        </tbody>
+      </table>
+      <div style="font-size:12px; color:#888; margin-top:8px; line-height:1.6;">
+        ※ 統計數據僅供參考，彩券開獎為隨機結果。<br>
+        ※ 冷號長期未出現，有人認為補號機率較高，但不代表保證。
+      </div>
+    </div>
+  </div>
+
+  <!-- 連出天數統計 -->
+  <div class="block">
+    <div class="block-hd">
+      📈 這些號碼 近期連續出現
+      <span class="block-hd-right">最近10期</span>
+    </div>
+    <div class="block-bd">
+      <div class="streak-row">
+        <div class="streak-num">23</div>
+        <div class="streak-bar-wrap">
+          <div class="streak-label">近10期出現次數</div>
+          <div class="streak-bar"><div class="streak-fill" style="width:70%"></div></div>
+        </div>
+        <div class="streak-count">7/10</div>
+      </div>
+      <div class="streak-row">
+        <div class="streak-num">07</div>
+        <div class="streak-bar-wrap">
+          <div class="streak-label">近10期出現次數</div>
+          <div class="streak-bar"><div class="streak-fill" style="width:60%"></div></div>
+        </div>
+        <div class="streak-count">6/10</div>
+      </div>
+      <div class="streak-row">
+        <div class="streak-num">15</div>
+        <div class="streak-bar-wrap">
+          <div class="streak-label">近10期出現次數</div>
+          <div class="streak-bar"><div class="streak-fill" style="width:50%"></div></div>
+        </div>
+        <div class="streak-count">5/10</div>
+      </div>
+      <div class="streak-row">
+        <div class="streak-num" style="background:linear-gradient(180deg,#a5d6a7,#388e3c); color:#fff; border-color:#2e7d32">04</div>
+        <div class="streak-bar-wrap">
+          <div class="streak-label">冷號近10期出現次數</div>
+          <div class="streak-bar"><div class="streak-fill" style="width:10%; background:linear-gradient(90deg,#388e3c,#66bb6a)"></div></div>
+        </div>
+        <div class="streak-count" style="color:#2e7d32">1/10</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 見證 -->
+  <div class="block">
+    <div class="block-hd">💬 會員中獎喜報</div>
+    <div class="block-bd">
+
+      <div class="testi-card">
+        <div class="testi-top">
+          <div class="testi-avatar">👨</div>
+          <div>
+            <div class="testi-name">台中 阿忠大哥</div>
+            <div class="testi-loc">62歲・退休族 <span class="testi-stars">★★★★★</span></div>
+          </div>
+        </div>
+        <div class="testi-body">
+          看到站上的熱號分析，自己挑了幾個下去，上禮拜真的對了3個！
+          領到<span class="prize-tag">$28,000</span>回家！老婆說我「終於有用一次」哈哈哈 🙏
+        </div>
+      </div>
+
+      <div class="testi-card">
+        <div class="testi-top">
+          <div class="testi-avatar">👩</div>
+          <div>
+            <div class="testi-name">高雄 美珠阿姨</div>
+            <div class="testi-loc">58歲・家管 <span class="testi-stars">★★★★★</span></div>
+          </div>
+        </div>
+        <div class="testi-body">
+          退休後每天看這裡的統計，上個月中了三次，最大那次
+          <span class="prize-tag">$51,000</span>！
+          站上的冷熱分析真的很有參考價值，每天必看！
+        </div>
+      </div>
+
+      <div class="testi-card">
+        <div class="testi-top">
+          <div class="testi-avatar">👨‍🦳</div>
+          <div>
+            <div class="testi-name">新北 建國先生</div>
+            <div class="testi-loc">55歲・上班族 <span class="testi-stars">★★★★☆</span></div>
+          </div>
+        </div>
+        <div class="testi-body">
+          半信半疑看了這裡的冷號分析，27號長期沒出來就去試了，
+          第二期真的開出來！對到<span class="prize-tag">$8,500</span>，
+          小贏一下心情超好！
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-wrap">
+    <div class="cta-top">▶ 每日準時免費發送分析 ◀</div>
+    <div class="cta-main"><em>完全免費</em> 不要白不要！</div>
+    <button class="cta-btn" onclick="window.open('https://line.me/ti/p/Km37RyQmDK','_blank')">
+      📲 立即免費加入<br>
+      <span style="font-size:13px; font-weight:700; letter-spacing:1px; opacity:0.85;">👆 點這裡 馬上加入 👆</span>
+    </button>
+    <div class="cta-small">
+      ✅ 完全免費 &nbsp;|&nbsp; ✅ 每日更新 &nbsp;|&nbsp;
+      已有 <b>3,847人</b> 加入
+    </div>
+  </div>
+
+  <!-- 常見問題 -->
+  <div class="block">
+    <div class="block-hd">❓ 大家最常問的問題</div>
+    <div class="block-bd">
+
+      <div class="faq-item">
+        <div class="faq-q">加入要付費嗎？</div>
+        <div class="faq-a">
+          完全免費！LINE群組加入就好，每天早上9點會把更新的統計資料放到群組裡，不用自己來查。
+        </div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">冷號「待爆」是什麼意思？</div>
+        <div class="faq-a">
+          就是這個號碼很久沒開出來了。有些人認為久沒出的號碼比較容易補出，這是一種選號思路，不代表一定會中。
+        </div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">539 跟大樂透有什麼不同？</div>
+        <div class="faq-a">
+          539是從01到39選5個號碼，每注28元，獎金雖然沒大樂透高，但中獎率相對高很多，適合每天玩一點的人。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 最後催 -->
+  <button class="last-push" onclick="window.open('https://line.me/ti/p/Km37RyQmDK','_blank')">
+    <div class="big">🔔 每日準時開獎！</div>
+    <div class="sm">還沒決定號碼？點擊加入看最新分析！</div>
+    <div class="tap-hint">👆 點我加入 👆</div>
+  </button>
+
+</div>
+
+<!-- 浮動按鈕 -->
+<div class="float-btn" onclick="window.open('https://line.me/ti/p/Km37RyQmDK','_blank')">
+  <span class="ico">📲</span>
+  免費加入
+</div>
+
+<!-- 底部 -->
+<div class="footer">
+  📲 每日分析免費領！私訊我們就對了，不要讓別人先拿走！<br>
+  加入的人都說好，還沒加入的快來！人多熱鬧一起研究！<br>
+  © 2025 539彩券研究站・資料每日更新
+</div>
+
+<script>
+  // 通知輪播（上下滑動）
+  (function() {
+    var items = document.querySelectorAll('.notice-item');
+    var idx = 0;
+    setInterval(function() {
+      var current = items[idx];
+      current.classList.remove('active');
+      current.classList.add('exit');
+      setTimeout(function() { current.classList.remove('exit'); }, 400);
+      idx = (idx + 1) % items.length;
+      items[idx].classList.add('active');
+    }, 2500);
+  })();
+</script>
+</body>
+</html>
